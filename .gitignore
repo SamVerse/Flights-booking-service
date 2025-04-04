@@ -1,4 +1,5 @@
 node_modules/
+Notes-ref_images/
 .env
 combined.log
 src/config/config.json
