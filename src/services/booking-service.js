@@ -87,7 +87,7 @@ async function makePayment(paymentData){
 
         if (timeDifferenceInMinutes > 5) {
             // Cancel the booking if it exceeds 5 minutes
-            await bookingRepository.update(paymentData.bookingId, {status: CANCELLED}, transaction);
+            await cancelBoooking(paymentData.bookingId);
             await transaction.commit();
             return { message: "Booking cancelled due to timeout" };
         }
@@ -105,8 +105,35 @@ async function makePayment(paymentData){
     }
 }
 
+async function cancelBoooking(bookingId){
+    try {
+        const transaction = await db.sequelize.transaction();
+        const bookingDetails = await bookingRepository.get(bookingId, transaction);
+        // Check if the booking is already cancelled
+        if (bookingDetails.status === CANCELLED) {
+            await transaction.commit();
+            return { message: "Booking already cancelled" };
+        }
+
+        // Update the seats in the flight
+        await axios.patch(`${ServerConfig.FLIGHT_SERVICE_API_URL}/api/v1/flights/${bookingDetails.flightId}/seats`, {
+            seats: bookingDetails.noOfSeats,
+            dec: 0,
+            // transaction: transaction,
+        });
+        // Update the booking status to cancelled
+        await bookingRepository.update(bookingId, {status: CANCELLED}, transaction);
+        await transaction.commit();
+
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
+    }
+}
+
 module.exports = {
     createBooking,
     // Other booking-related functions can be added here
     makePayment,
+    cancelBoooking
 };
