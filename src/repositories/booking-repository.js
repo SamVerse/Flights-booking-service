@@ -3,6 +3,11 @@ const { StatusCodes } = require('http-status-codes');
 const {Booking} = require('../models');
 const CrudRepository = require('./crud-repository');
 const AppError = require('../utils/errors/app-error');
+const { Op } = require('sequelize');
+
+
+const {Enums} = require('../utils/common')
+const {PENDING, INITIATED, CANCELLED} = Enums.BOOKING_STATUS
 
 class BookingRepository extends CrudRepository {
     constructor() {
@@ -35,6 +40,33 @@ class BookingRepository extends CrudRepository {
         });
         return response;
       }
+
+    async cancelOldBookings(timestamp) {
+        const response = await Booking.update(
+            // only want to update the status of the booking whose status is pending or initiated
+            { status: CANCELLED },
+            {
+                where: {
+                    [Op.and]: [
+                        {   
+                            status: {   
+                                    [Op.or]: [
+                                        { [Op.eq]: PENDING },
+                                        { [Op.eq]: INITIATED }
+                                    ]
+                            }
+                         },
+                        { 
+                            createdAt: {
+                                 [Op.lt]: timestamp 
+                            } 
+                        }
+                    ]
+                }
+            }
+        );
+        return response;
+    }
 
 }
 

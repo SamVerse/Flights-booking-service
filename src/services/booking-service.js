@@ -131,9 +131,23 @@ async function cancelBoooking(bookingId){
     }
 }
 
+async function cancelOldBookings(){
+    try {
+        const currentTime = new Date();
+        const timestamp = new Date(currentTime.getTime() - 5 * 60 * 1000); // 5 minutes ago
+
+        const response = await bookingRepository.cancelOldBookings(timestamp);
+        return response;
+    } catch (error) {
+        console.error("Error cancelling old bookings:", error);
+        throw error;
+    }
+}
+
 module.exports = {
     createBooking,
     // Other booking-related functions can be added here
     makePayment,
-    cancelBoooking
+    cancelBoooking,
+    cancelOldBookings
 };
