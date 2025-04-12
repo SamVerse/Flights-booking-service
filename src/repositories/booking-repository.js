@@ -39,8 +39,8 @@ class BookingRepository extends CrudRepository {
           transaction // This should be inside the options object
         });
         return response;
-      }
-
+    }
+    
     async cancelOldBookings(timestamp) {
         const response = await Booking.update(
             // only want to update the status of the booking whose status is pending or initiated
@@ -67,7 +67,7 @@ class BookingRepository extends CrudRepository {
         );
         return response;
     }
-
+    
 }
 
 module.exports = BookingRepository;
